@@ -3,6 +3,8 @@
 #include <string>
 #include <cctype> //function for character classification
 #include <map>
+#include <fstream>  // For file input
+#include <sstream>  // For string stream
 
 using namespace std;
 
@@ -213,24 +215,32 @@ private:
     }
 };
 
-int main() {
-    string input = R"(
-        int a;
-        a = 5;
-        int b;
-        b = a + 10;
-        if (b > 10) {
-            return b;
-        } else {
-            return 0;
-        }
-    )";
+int main(int argc, char* argv[]) {
+
+
+    if (argc < 2) {
+        cout << "Usage: " << argv[0] << " <filename>" << endl;
+        return 1;
+    }
+
+    // Read the file content into a string
+    string filename = argv[1];
+    ifstream file(filename);
+    if (!file) {
+        cout << "Error: Could not open file " << filename << endl;
+        return 1;
+    }
+
+    stringstream buffer;
+    buffer << file.rdbuf();
+    string input = buffer.str();
 
     Lexer lexer(input);
     vector<Token> tokens = lexer.tokenize();
     
     Parser parser(tokens);
     parser.parseProgram();
+
 
     return 0;
 }
