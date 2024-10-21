@@ -11,6 +11,11 @@ using namespace std;
 enum TokenType
 { // used for fixed values
     T_INT,
+    T_FLOAT,
+    T_DOUBLE,
+    T_STRING,
+    T_BOOL,
+    T_CHAR,
     T_ID,
     T_NUM,
     T_IF,
@@ -27,13 +32,14 @@ enum TokenType
     T_RBRACE,
     T_SEMICOLON,
     T_GT,
-    T_EOF,
+    T_EOF
 };
 
 struct Token
 {
     TokenType type;
     string value;
+
     int line; // Add line number to token
 };
 
@@ -53,6 +59,14 @@ public:
         while (pos < src.size())
         {
             char current = src[pos];
+
+            if (current == '#')
+            {
+                // Skip to the end of the line.
+                while (pos < src.size() && src[pos] != '\n')
+                    pos++;
+                continue;
+            }
 
             if (current == '\n')
             {
@@ -75,15 +89,25 @@ public:
             {
                 string word = consumeWord();
                 if (word == "int")
-                    tokens.push_back(Token{T_INT, word, line});
+                    tokens.push_back(Token{T_INT, word});
+                else if (word == "float")
+                    tokens.push_back(Token{T_FLOAT, word});
+                else if (word == "double")
+                    tokens.push_back(Token{T_DOUBLE, word});
+                else if (word == "string")
+                    tokens.push_back(Token{T_STRING, word});
+                else if (word == "bool")
+                    tokens.push_back(Token{T_BOOL, word});
+                else if (word == "char")
+                    tokens.push_back(Token{T_CHAR, word});
                 else if (word == "if")
-                    tokens.push_back(Token{T_IF, word, line});
+                    tokens.push_back(Token{T_IF, word});
                 else if (word == "else")
-                    tokens.push_back(Token{T_ELSE, word, line});
+                    tokens.push_back(Token{T_ELSE, word});
                 else if (word == "return")
-                    tokens.push_back(Token{T_RETURN, word, line});
+                    tokens.push_back(Token{T_RETURN, word});
                 else
-                    tokens.push_back(Token{T_ID, word, line});
+                    tokens.push_back(Token{T_ID, word});
                 continue;
             }
 
@@ -136,8 +160,36 @@ public:
     string consumeNumber()
     {
         size_t start = pos;
-        while (pos < src.size() && isdigit(src[pos]))
+        bool hasDecimal = false;
+
+        while (pos < src.size() && (isdigit(src[pos]) || src[pos] == '.'))
+        {
+            if (src[pos] == '.')
+            {
+                if (hasDecimal)
+                {
+                    cout << "Syntax error: Unexpected '.' in number at position " << pos << endl;
+                    exit(1);
+                }
+                hasDecimal = true;
+            }
             pos++;
+        }
+
+        // Handle scientific notation (e.g., 1.23e+10)
+        if (pos < src.size() && (src[pos] == 'e' || src[pos] == 'E'))
+        {
+            pos++;
+            if (pos < src.size() && (src[pos] == '+' || src[pos] == '-'))
+            {
+                pos++;
+            }
+            while (pos < src.size() && isdigit(src[pos]))
+            {
+                pos++;
+            }
+        }
+
         return src.substr(start, pos - start);
     }
 
@@ -202,6 +254,8 @@ private:
         }
     }
 
+  
+
     void parseBlock()
     {
         expect(T_LBRACE);
@@ -213,9 +267,19 @@ private:
     }
     void parseDeclaration()
     {
-        expect(T_INT);
-        expect(T_ID);
-        expect(T_SEMICOLON);
+        if (tokens[pos].type == T_INT || tokens[pos].type == T_FLOAT ||
+            tokens[pos].type == T_DOUBLE || tokens[pos].type == T_STRING ||
+            tokens[pos].type == T_BOOL || tokens[pos].type == T_CHAR)
+        {
+            pos++;               // Move past the type keyword
+            expect(T_ID);        // Expect an identifier (variable name)
+            expect(T_SEMICOLON); // Expect a semicolon after declaration
+        }
+        else
+        {
+            cout << "Syntax error: Unexpected type declaration " << tokens[pos].value << endl;
+            exit(1);
+        }
     }
 
     void parseAssignment()

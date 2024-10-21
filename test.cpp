@@ -1,14 +1,37 @@
 
-int Main()
+#include <iostream> //input output
+#include <vector>   // make vectors
+#include <string>
+#include <cctype> //function for character classification
+#include <map>
+#include <fstream> // For file input
+#include <sstream> // For string stream
+
+using namespace std;
+int main()
 {
 
-    int ab;
-    ab = 5;
-    int bb;
-    bb = ab + 10;
-    if (bb > 10)
+    int a;
+    a = 5;
+
+    float pi;
+    pi = 3.14;
+
+    double largeNumber;
+    largeNumber = 1.23e+10;
+
+    int name;
+    name = 1;
+
+    bool isActive;
+    isActive = true;
+
+    char initial;
+    initial = 'C';
+
+    if (a > 3)
     {
-        return bb;
+        return a;
     }
     else
     {
