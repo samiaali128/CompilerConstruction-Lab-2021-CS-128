@@ -16,4 +16,4 @@ This repository contains the project files for the Compiler Construction course 
 To run this project locally:
 1. Clone this repository using the following command:
    ```bash
-   git clone https://github.com/SamiaLiaqat/compiler-construction-course-2024.git
+   [git clone [https://github.com/samiaali128/CompilerConstruction-Lab-2021-CS-128.git]]
