@@ -3,6 +3,7 @@
 ### Developer Information
 - **Name**: Samia Liaqat
 - **Registration Number**: 2021-CS-128
+  **Section**: C
 
 ### Project Description
 This repository contains the project files for the Compiler Construction course offered in Fall 2024. The project involves step-by-step implementation of a simple compiler. It covers various phases of the compilation process such as lexical analysis, syntax parsing, semantic analysis, intermediate code generation, optimization, and code generation.
