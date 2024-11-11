@@ -1,15 +1,13 @@
-#include <iostream> //input output
-#include <vector>   // make vectors
+#include <iostream>
+#include <vector>
 #include <string>
-#include <cctype> //function for character classification
-#include <map>
-#include <fstream> // For file input
-#include <sstream> // For string stream
+#include <cctype>
+#include <unordered_map>
 
 using namespace std;
 
 enum TokenType
-{ // used for fixed values
+{
     T_INT,
     T_FLOAT,
     T_DOUBLE,
@@ -18,9 +16,7 @@ enum TokenType
     T_CHAR,
     T_ID,
     T_NUM,
-    T_IF,
-    T_ELSE,
-    T_RETURN,
+    T_Agar,
     T_ASSIGN,
     T_PLUS,
     T_MINUS,
@@ -32,15 +28,16 @@ enum TokenType
     T_RBRACE,
     T_SEMICOLON,
     T_GT,
-    T_EOF
+    T_EOF,
+    T_RETURN,
+    T_ELSE
 };
 
 struct Token
 {
     TokenType type;
     string value;
-
-    int line; // Add line number to token
+    size_t line;
 };
 
 class Lexer
@@ -48,10 +45,14 @@ class Lexer
 private:
     string src;
     size_t pos;
-    int line; // Track line number
+    size_t line;
+    unordered_map<string, TokenType> keywords;
 
 public:
-    Lexer(const string &src) : src(src), pos(0), line(1) {}
+    Lexer(const string &src) : pos(0), line(1), keywords({{"int", T_INT}, {"float", T_FLOAT}, {"double", T_DOUBLE}, {"string", T_STRING}, {"bool", T_BOOL}, {"char", T_CHAR}, {"Agar", T_Agar}, {"return", T_RETURN}, {"else", T_ELSE}})
+    {
+        this->src = src;
+    }
 
     vector<Token> tokenize()
     {
@@ -59,24 +60,10 @@ public:
         while (pos < src.size())
         {
             char current = src[pos];
-
-            if (current == '#')
-            {
-                // Skip to the end of the line.
-                while (pos < src.size() && src[pos] != '\n')
-                    pos++;
-                continue;
-            }
-
-            if (current == '\n')
-            {
-                line++;
-                pos++;
-                continue;
-            }
-
             if (isspace(current))
             {
+                if (current == '\n')
+                    line++;
                 pos++;
                 continue;
             }
@@ -85,35 +72,27 @@ public:
                 tokens.push_back(Token{T_NUM, consumeNumber(), line});
                 continue;
             }
+            if (current == '"')
+            {
+                tokens.push_back(Token{T_STRING, consumeString(), line});
+                continue;
+            }
             if (isalpha(current))
             {
                 string word = consumeWord();
-                if (word == "int")
-                    tokens.push_back(Token{T_INT, word});
-                else if (word == "float")
-                    tokens.push_back(Token{T_FLOAT, word});
-                else if (word == "double")
-                    tokens.push_back(Token{T_DOUBLE, word});
-                else if (word == "string")
-                    tokens.push_back(Token{T_STRING, word});
-                else if (word == "bool")
-                    tokens.push_back(Token{T_BOOL, word});
-                else if (word == "char")
-                    tokens.push_back(Token{T_CHAR, word});
-                else if (word == "if")
-                    tokens.push_back(Token{T_IF, word});
-                else if (word == "else")
-                    tokens.push_back(Token{T_ELSE, word});
-                else if (word == "return")
-                    tokens.push_back(Token{T_RETURN, word});
+                auto it = keywords.find(word);
+                if (it != keywords.end())
+                {
+                    tokens.push_back(Token{it->second, word, line});
+                }
                 else
-                    tokens.push_back(Token{T_ID, word});
+                {
+                    tokens.push_back(Token{T_ID, word, line});
+                }
                 continue;
             }
-
             switch (current)
             {
-            // Add line number to each token here
             case '=':
                 tokens.push_back(Token{T_ASSIGN, "=", line});
                 break;
@@ -123,8 +102,8 @@ public:
             case '-':
                 tokens.push_back(Token{T_MINUS, "-", line});
                 break;
-            case '*':
-                tokens.push_back(Token{T_MUL, "*", line});
+            case ' ':
+                tokens.push_back(Token{T_MUL, "", line});
                 break;
             case '/':
                 tokens.push_back(Token{T_DIV, "/", line});
@@ -148,7 +127,7 @@ public:
                 tokens.push_back(Token{T_GT, ">", line});
                 break;
             default:
-                cout << "Unexpected character at line " << line << ": " << current << endl;
+                cerr << "Unexpected character: " << current << " at line " << line << endl;
                 exit(1);
             }
             pos++;
@@ -160,36 +139,8 @@ public:
     string consumeNumber()
     {
         size_t start = pos;
-        bool hasDecimal = false;
-
         while (pos < src.size() && (isdigit(src[pos]) || src[pos] == '.'))
-        {
-            if (src[pos] == '.')
-            {
-                if (hasDecimal)
-                {
-                    cout << "Syntax error: Unexpected '.' in number at position " << pos << endl;
-                    exit(1);
-                }
-                hasDecimal = true;
-            }
             pos++;
-        }
-
-        // Handle scientific notation (e.g., 1.23e+10)
-        if (pos < src.size() && (src[pos] == 'e' || src[pos] == 'E'))
-        {
-            pos++;
-            if (pos < src.size() && (src[pos] == '+' || src[pos] == '-'))
-            {
-                pos++;
-            }
-            while (pos < src.size() && isdigit(src[pos]))
-            {
-                pos++;
-            }
-        }
-
         return src.substr(start, pos - start);
     }
 
@@ -200,34 +151,52 @@ public:
             pos++;
         return src.substr(start, pos - start);
     }
+
+    string consumeString()
+    {
+        size_t start = pos;
+        pos++;
+        while (pos < src.size() && src[pos] != '"')
+        {
+            if (src[pos] == '\n')
+                line++;
+            pos++;
+        }
+        if (pos < src.size())
+        {
+            pos++;
+            return src.substr(start, pos - start);
+        }
+        else
+        {
+            cerr << "Unterminated string literal at line " << line << endl;
+            exit(1);
+        }
+    }
 };
 
 class Parser
 {
+private:
+    vector<Token> tokens;
+    size_t pos;
 
 public:
-    Parser(const vector<Token> &tokens)
-    {
-        this->tokens = tokens;
-        this->pos = 0;
-    }
+    Parser(const vector<Token> &tokens) : tokens(tokens), pos(0) {}
 
-    void parseProgram()
+    void parse()
     {
         while (tokens[pos].type != T_EOF)
         {
             parseStatement();
         }
-        cout << "Parsing completed successfully! No Syntax Error" << endl;
     }
-
-private:
-    vector<Token> tokens;
-    size_t pos;
 
     void parseStatement()
     {
-        if (tokens[pos].type == T_INT)
+        if (tokens[pos].type == T_INT || tokens[pos].type == T_FLOAT ||
+            tokens[pos].type == T_DOUBLE || tokens[pos].type == T_STRING ||
+            tokens[pos].type == T_BOOL || tokens[pos].type == T_CHAR)
         {
             parseDeclaration();
         }
@@ -235,51 +204,87 @@ private:
         {
             parseAssignment();
         }
-        else if (tokens[pos].type == T_IF)
+        else if (tokens[pos].type == T_Agar)
         {
-            parseIfStatement();
+            parseAgarStatement();
         }
         else if (tokens[pos].type == T_RETURN)
         {
             parseReturnStatement();
         }
-        else if (tokens[pos].type == T_LBRACE)
-        {
-            parseBlock();
-        }
         else
         {
-            cout << "Syntax error at line " << tokens[pos].line << ": unexpected token " << tokens[pos].value << endl;
+            cerr << "Syntax error: unexpected token type " << tokens[pos].type
+                 << " at line " << tokens[pos].line << endl;
             exit(1);
         }
     }
 
-  
-
-    void parseBlock()
+    void parseAgarStatement()
     {
+        expect(T_Agar);
+        expect(T_LPAREN);
+        parseExpression();
+        expect(T_RPAREN);
         expect(T_LBRACE);
-        while (tokens[pos].type != T_RBRACE && tokens[pos].type != T_EOF)
-        {
-            parseStatement();
-        }
+        parseStatement();
         expect(T_RBRACE);
+
+        if (tokens[pos].type == T_ELSE)
+        {
+            expect(T_ELSE);
+            expect(T_LBRACE);
+            parseStatement();
+            expect(T_RBRACE);
+        }
     }
+
+    void expect(TokenType expected)
+    {
+        if (tokens[pos].type == expected)
+        {
+            pos++;
+        }
+        else
+        {
+            cerr << "Syntax error: expected token type " << expected
+                 << " but found token type " << tokens[pos].type
+                 << " at line " << tokens[pos].line << endl;
+            exit(1);
+        }
+    }
+
+    void parseExpression()
+    {
+        if (tokens[pos].type == T_ID || tokens[pos].type == T_NUM)
+        {
+            pos++;
+            if (tokens[pos].type == T_GT)
+            { // Support for > comparison
+                pos++;
+                if (tokens[pos].type == T_ID || tokens[pos].type == T_NUM)
+                {
+                    pos++;
+                }
+                else
+                {
+                    cerr << "Expected an identifier or number after '>' at line " << tokens[pos].line << endl;
+                    exit(1);
+                }
+            }
+        }
+        else
+        {
+            cerr << "Expected an identifier or number at line " << tokens[pos].line << endl;
+            exit(1);
+        }
+    }
+
     void parseDeclaration()
     {
-        if (tokens[pos].type == T_INT || tokens[pos].type == T_FLOAT ||
-            tokens[pos].type == T_DOUBLE || tokens[pos].type == T_STRING ||
-            tokens[pos].type == T_BOOL || tokens[pos].type == T_CHAR)
-        {
-            pos++;               // Move past the type keyword
-            expect(T_ID);        // Expect an identifier (variable name)
-            expect(T_SEMICOLON); // Expect a semicolon after declaration
-        }
-        else
-        {
-            cout << "Syntax error: Unexpected type declaration " << tokens[pos].value << endl;
-            exit(1);
-        }
+        expect(tokens[pos].type);
+        expect(T_ID);
+        expect(T_SEMICOLON);
     }
 
     void parseAssignment()
@@ -290,113 +295,36 @@ private:
         expect(T_SEMICOLON);
     }
 
-    void parseIfStatement()
-    {
-        expect(T_IF);
-        expect(T_LPAREN);
-        parseExpression();
-        expect(T_RPAREN);
-        parseStatement();
-        if (tokens[pos].type == T_ELSE)
-        {
-            expect(T_ELSE);
-            parseStatement();
-        }
-    }
-
     void parseReturnStatement()
     {
         expect(T_RETURN);
         parseExpression();
         expect(T_SEMICOLON);
     }
-
-    void parseExpression()
-    {
-        parseTerm();
-        while (tokens[pos].type == T_PLUS || tokens[pos].type == T_MINUS)
-        {
-            pos++;
-            parseTerm();
-        }
-        if (tokens[pos].type == T_GT)
-        {
-            pos++;
-            parseExpression(); // After relational operator, parse the next expression
-        }
-    }
-
-    void parseTerm()
-    {
-        parseFactor();
-        while (tokens[pos].type == T_MUL || tokens[pos].type == T_DIV)
-        {
-            pos++;
-            parseFactor();
-        }
-    }
-
-    void parseFactor()
-    {
-        if (tokens[pos].type == T_NUM || tokens[pos].type == T_ID)
-        {
-            pos++;
-        }
-        else if (tokens[pos].type == T_LPAREN)
-        {
-            expect(T_LPAREN);
-            parseExpression();
-            expect(T_RPAREN);
-        }
-        else
-        {
-            cout << "Syntax error: unexpected token " << tokens[pos].value << endl;
-            exit(1);
-        }
-    }
-
-    void expect(TokenType type)
-    {
-        if (tokens[pos].type == type)
-        {
-            pos++;
-        }
-        else
-        {
-            cout << "Syntax error at line " << tokens[pos].line << ": expected " << type
-                 << " but found " << tokens[pos].value << endl;
-            exit(1);
-        }
-    }
 };
 
-int main(int argc, char *argv[])
+int main()
 {
+    string sourceCode = R"(
+        int a;
+        float b;
 
-    if (argc < 2)
-    {
-        cout << "Usage: " << argv[0] << " <filename>" << endl;
-        return 1;
-    }
+        a = 5;
+        b = 3.14
 
-    // Read the file content into a string
-    string filename = argv[1];
-    ifstream file(filename);
-    if (!file)
-    {
-        cout << "Error: Could not open file " << filename << endl;
-        return 1;
-    }
+        Agar (a > 10) {
+            return a;
+        } else {
+            return b;
+        }
+    )";
 
-    stringstream buffer;
-    buffer << file.rdbuf();
-    string input = buffer.str();
-
-    Lexer lexer(input);
+    Lexer lexer(sourceCode);
     vector<Token> tokens = lexer.tokenize();
 
     Parser parser(tokens);
-    parser.parseProgram();
+    parser.parse();
 
+    cout << "Parsing completed successfully!" << endl;
     return 0;
 }

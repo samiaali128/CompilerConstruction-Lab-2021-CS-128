@@ -20,8 +20,8 @@ int main()
     double largeNumber;
     largeNumber = 1.23e+10;
 
-    int name;
-    name = 1;
+    string name;
+    name = "sam";
 
     bool isActive;
     isActive = true;
