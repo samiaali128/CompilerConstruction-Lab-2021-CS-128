@@ -46,10 +46,11 @@ private:
     string src;
     size_t pos;
     size_t line;
+    size_t tokenCount; // To keep track of the total number of tokens
     unordered_map<string, TokenType> keywords;
 
 public:
-    Lexer(const string &src) : pos(0), line(1), keywords({{"int", T_INT}, {"float", T_FLOAT}, {"double", T_DOUBLE}, {"string", T_STRING}, {"bool", T_BOOL}, {"char", T_CHAR}, {"Agar", T_Agar}, {"return", T_RETURN}, {"else", T_ELSE}})
+    Lexer(const string &src) : pos(0), line(1), tokenCount(0), keywords({{"int", T_INT}, {"float", T_FLOAT}, {"double", T_DOUBLE}, {"string", T_STRING}, {"bool", T_BOOL}, {"char", T_CHAR}, {"Agar", T_Agar}, {"return", T_RETURN}, {"else", T_ELSE}})
     {
         this->src = src;
     }
@@ -67,14 +68,39 @@ public:
                 pos++;
                 continue;
             }
+
+            // Skip single-line comments
+            if (current == '/' && pos + 1 < src.size() && src[pos + 1] == '/')
+            {
+                while (pos < src.size() && src[pos] != '\n')
+                    pos++;
+                continue;
+            }
+
+            // Skip multi-line comments
+            if (current == '/' && pos + 1 < src.size() && src[pos + 1] == '*')
+            {
+                pos += 2;
+                while (pos + 1 < src.size() && !(src[pos] == '*' && src[pos + 1] == '/'))
+                {
+                    if (src[pos] == '\n')
+                        line++;
+                    pos++;
+                }
+                pos += 2; // Skip the closing */
+                continue;
+            }
+
             if (isdigit(current))
             {
                 tokens.push_back(Token{T_NUM, consumeNumber(), line});
+                tokenCount++;
                 continue;
             }
             if (current == '"')
             {
                 tokens.push_back(Token{T_STRING, consumeString(), line});
+                tokenCount++;
                 continue;
             }
             if (isalpha(current))
@@ -89,42 +115,54 @@ public:
                 {
                     tokens.push_back(Token{T_ID, word, line});
                 }
+                tokenCount++;
                 continue;
             }
             switch (current)
             {
             case '=':
                 tokens.push_back(Token{T_ASSIGN, "=", line});
+                tokenCount++;
                 break;
             case '+':
                 tokens.push_back(Token{T_PLUS, "+", line});
+                tokenCount++;
                 break;
             case '-':
                 tokens.push_back(Token{T_MINUS, "-", line});
+                tokenCount++;
                 break;
-            case ' ':
-                tokens.push_back(Token{T_MUL, "", line});
+            case '*':
+                tokens.push_back(Token{T_MUL, "*", line});
+                tokenCount++;
                 break;
             case '/':
                 tokens.push_back(Token{T_DIV, "/", line});
+                tokenCount++;
                 break;
             case '(':
                 tokens.push_back(Token{T_LPAREN, "(", line});
+                tokenCount++;
                 break;
             case ')':
                 tokens.push_back(Token{T_RPAREN, ")", line});
+                tokenCount++;
                 break;
             case '{':
                 tokens.push_back(Token{T_LBRACE, "{", line});
+                tokenCount++;
                 break;
             case '}':
                 tokens.push_back(Token{T_RBRACE, "}", line});
+                tokenCount++;
                 break;
             case ';':
                 tokens.push_back(Token{T_SEMICOLON, ";", line});
+                tokenCount++;
                 break;
             case '>':
                 tokens.push_back(Token{T_GT, ">", line});
+                tokenCount++;
                 break;
             default:
                 cerr << "Unexpected character: " << current << " at line " << line << endl;
@@ -133,6 +171,7 @@ public:
             pos++;
         }
         tokens.push_back(Token{T_EOF, "", line});
+        tokenCount++;
         return tokens;
     }
 
@@ -172,6 +211,11 @@ public:
             cerr << "Unterminated string literal at line " << line << endl;
             exit(1);
         }
+    }
+
+    size_t getTokenCount() const
+    {
+        return tokenCount;
     }
 };
 
@@ -260,7 +304,7 @@ public:
         {
             pos++;
             if (tokens[pos].type == T_GT)
-            { // Support for > comparison
+            {
                 pos++;
                 if (tokens[pos].type == T_ID || tokens[pos].type == T_NUM)
                 {
@@ -306,21 +350,27 @@ public:
 int main()
 {
     string sourceCode = R"(
-        int a;
+        
         float b;
 
-        a = 5;
+       
         b = 3.14
 
+        // This is a single-line comment
         Agar (a > 10) {
             return a;
         } else {
             return b;
         }
+
+        /* This is
+           a multi-line
+           comment */
     )";
 
     Lexer lexer(sourceCode);
     vector<Token> tokens = lexer.tokenize();
+    cout << "Total tokens: " << lexer.getTokenCount() << endl;
 
     Parser parser(tokens);
     parser.parse();
