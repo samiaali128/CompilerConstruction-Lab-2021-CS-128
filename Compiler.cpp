@@ -762,7 +762,7 @@ private:
     SymbolTable &symTable;
     IntermediateCodeGnerator &icg;
 
-    void Parser::parseStatement()
+    void parseStatement()
     {
         if (tokens[pos].type == T_INT || tokens[pos].type == T_FLOAT ||
             tokens[pos].type == T_DOUBLE || tokens[pos].type == T_STRING ||
@@ -829,7 +829,7 @@ private:
         }
     }
 
-    void Parser::parseVoidFunction()
+    void parseVoidFunction()
     {
         cout << "LEts see\n";
         expect(T_VOID);
@@ -838,21 +838,21 @@ private:
         expect(T_RPAREN);
         parseBlock();
     }
-    void Parser::parseInputStatement()
+    void parseInputStatement()
     {
         expect(T_STARNDARD_INPUT_STREAM);
         expect(T_EXTRACTION_OPERATOR);
         expect(T_ID);
         expect(T_SEMICOLON);
     }
-    void Parser::parsePrintStatement()
+    void parsePrintStatement()
     {
         expect(T_STANDARD_OUTPUT_STREAM);
         expect(T_STREAM_INSERTION_OPERATOR);
         expect(T_STRING);
         expect(T_SEMICOLON);
     }
-    void Parser::parseDoWhileStatement()
+    void parseDoWhileStatement()
     {
         // Parse 'do' keyword
         expect(T_DO);
@@ -888,12 +888,12 @@ private:
         icg.addInstruction(endLabel + ":");
     }
 
-    void Parser::parseBreakStatement()
+    void parseBreakStatement()
     {
         expect(T_BREAK);
         expect(T_SEMICOLON);
     }
-    void Parser::parseSwitchStatement()
+    void parseSwitchStatement()
     {
         // Parse 'switch' keyword
         expect(T_SWITCH);
@@ -984,7 +984,7 @@ private:
         expect(T_RBRACE);
     }
 
-    string Parser::parseIncrementDecrement()
+    string parseIncrementDecrement()
     {
         if (tokens[pos].type == T_ID)
         {
@@ -1025,7 +1025,7 @@ private:
         }
     }
 
-    void Parser::parseInitialization()
+    void parseInitialization()
     {
         if (tokens[pos].type == T_ID)
         {
@@ -1038,7 +1038,7 @@ private:
         }
     }
 
-    void Parser::parseForStatement()
+    void parseForStatement()
     {
         string initLabel = "L" + to_string(icg.tempCount++);
         string startLabel = "L" + to_string(icg.tempCount++);
@@ -1067,7 +1067,7 @@ private:
         icg.addInstruction(endLabel + ":");
     }
 
-    void Parser::parseWhileStatement()
+    void parseWhileStatement()
     {
         string startLabel = "L" + to_string(icg.tempCount++);
         string endLabel = "L" + to_string(icg.tempCount++);
@@ -1092,7 +1092,7 @@ private:
         icg.addInstruction(endLabel + ":");
     }
 
-    void Parser::parseAgarStatement()
+    void parseAgarStatement()
     {
         expect(T_AGAR);
         expect(T_LPAREN);
@@ -1130,7 +1130,7 @@ private:
      int x;   // This will be parsed and the symbol table will store x with type "int".
     */
 
-    void Parser::parseDeclarationOrDeclarationAssignment()
+    void parseDeclarationOrDeclarationAssignment()
     {
         // Determine the type of the variable
         string varType;
@@ -1208,7 +1208,7 @@ private:
    */
 
     // The parseAssignment function
-    void Parser::parseAssignment()
+    void parseAssignment()
     {
         string varName = expectAndReturnValue(T_ID);
         symTable.getVariableType(varName);
@@ -1244,7 +1244,7 @@ private:
         if(5 > 3) { x = 20; }  --> This will generate intermediate code for the condition check and jump instructions.
    */
 
-    void Parser::parseIfStatement()
+    void parseIfStatement()
     {
         expect(T_IF);
         expect(T_LPAREN);
@@ -1282,7 +1282,7 @@ private:
         return x + 5;   -->  This will generate intermediate code like `return x + 5`.
     */
 
-    void Parser::parseReturnStatement()
+    void parseReturnStatement()
     {
         expect(T_RETURN);
         string expr = parseExpression();
@@ -1297,7 +1297,7 @@ private:
         { x = 10; y = 20; }   -->  This will parse each statement inside the block.
     */
 
-    void Parser::parseBlock()
+    void parseBlock()
     {
         expect(T_LBRACE);
         while (tokens[pos].type != T_RBRACE && tokens[pos].type != T_EOF)
@@ -1315,7 +1315,7 @@ private:
        5 + 3 - 2;  -->  This will generate intermediate code like `t0 = 5 + 3` and `t1 = t0 - 2`.
    */
 
-    string Parser::parseExpression()
+    string parseExpression()
     {
         string term = parseTerm();
         while (tokens[pos].type == T_PLUS || tokens[pos].type == T_MINUS)
@@ -1378,7 +1378,7 @@ private:
        5 * 3 / 2;   This will generate intermediate code like `t0 = 5 * 3` and `t1 = t0 / 2`.
    */
 
-    string Parser::parseTerm()
+    string parseTerm()
     {
         string factor = parseFactor();
         while (tokens[pos].type == T_MUL || tokens[pos].type == T_DIV)
@@ -1401,7 +1401,7 @@ private:
        (5 + 3);    --> This will return the sub-expression "5 + 3".
    */
 
-    string Parser::parseFactor()
+    string parseFactor()
     {
         if (tokens[pos].type == T_NUM)
         {
@@ -1441,7 +1441,7 @@ private:
        and the program exits. If the token type matches, it advances the position to the next token.
    */
 
-    void Parser::expect(TokenType type)
+    void expect(TokenType type)
     {
         if (tokens[pos].type != type)
         {
@@ -1462,7 +1462,7 @@ private:
    - This function is helpful when checking for the correct syntax or structure in a language's grammar, ensuring the parser processes the tokens in the correct order.
    */
 
-    string Parser::expectAndReturnValue(TokenType type)
+    string expectAndReturnValue(TokenType type)
     {
         string value = tokens[pos].value;
         expect(type);

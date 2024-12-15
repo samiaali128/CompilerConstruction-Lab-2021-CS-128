@@ -1,0 +1,103 @@
+x = 10
+y = 20
+sum = 40
+price = 20.09774
+pi = 3.14e+2
+name = Samia Liaqat
+flag = false
+t0 = x == 10
+t1 = t0
+if t1 goto L1
+goto L2
+L1:
+y = 999
+L2:
+t2 = x != y
+t3 = t2
+if t3 goto L1
+goto L2
+L1:
+t4 = price * price
+price = t4
+L2:
+t5 = price <= 12
+t6 = t5
+if t6 goto L1
+goto L2
+L1:
+name = Samia Liaqat
+L2:
+count = 25
+a = 10
+b = 20
+t7 = a < 10
+t8 = t7
+if t8 goto L1
+goto L2
+L1:
+t9 = a + b
+t10 = t9 + sum
+sum = t10
+goto L3
+L2:
+t11 = x + y
+t12 = t11 + 3
+sum = t12
+L3:
+t13 = x > y
+t14 = t13
+agar t14 goto L1
+goto L2
+L1:
+t15 = 20 + sum
+x = t15
+goto L3
+L2:
+sum = y
+L3:
+goto L16
+L16:
+t18 = sum > 5
+t19 = t18
+if t19 goto L17
+goto L16
+t20 = x + 30
+x = t20
+t21 = sum + 1
+sum = t21
+goto L16
+L17:
+i = 0
+L22:
+t25 = i > 5
+if t25 goto L24
+t26 = i + 1
+i = t26
+L23:
+i = t26
+goto L22
+L24:
+t29 = x == 1
+if !t29 goto t30_next_case
+result = true
+goto t27_switch_end
+t30_next_case:
+t32 = x == 2
+if !t32 goto t33_next_case
+result = false
+goto t27_switch_end
+t33_next_case:
+t34 = x > 0
+result = t34
+t27_switch_end:
+t35_do_while_start:
+t36 = x + 1
+x = t36
+t37 = y * 2
+y = t37
+t38_do_while_condition:
+t39 = x < 10
+t40 = t39
+if !t40 goto t41_do_while_end
+goto t35_do_while_start
+t41_do_while_end:
